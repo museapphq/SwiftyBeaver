@@ -32,7 +32,7 @@ open class SwiftyBeaver {
     /// A private queue for synchronizing access to `destinations`.
     /// Read accesses are done concurrently.
     /// Write accesses are done with a barrier, ensuring only 1 operation is ran at that time.
-    private static let queue = DispatchQueue(label: "destination queue", attributes: .concurrent)
+    private static let queue = DispatchQueue(label: "destination queue", attributes: .concurrent, autoreleaseFrequency: .workItem)
 
     // MARK: Destination Handling
 
@@ -193,11 +193,15 @@ open class SwiftyBeaver {
 
                 if dest.asynchronously {
                     queue.async {
-                        _ = dest.send(level, msg: msgStr, thread: thread, file: file, function: f, line: line, context: context)
+                        autoreleasepool {
+                            _ = dest.send(level, msg: msgStr, thread: thread, file: file, function: f, line: line, context: context)
+                        }
                     }
                 } else {
                     queue.sync {
-                        _ = dest.send(level, msg: msgStr, thread: thread, file: file, function: f, line: line, context: context)
+                        autoreleasepool {
+                            _ = dest.send(level, msg: msgStr, thread: thread, file: file, function: f, line: line, context: context)
+                        }
                     }
                 }
             }
@@ -217,13 +221,17 @@ open class SwiftyBeaver {
             grp.enter()
             if dest.asynchronously {
                 queue.async {
-                    dest.flush()
-                    grp.leave()
+                    autoreleasepool {
+                        dest.flush()
+                        grp.leave()
+                    }
                 }
             } else {
                 queue.sync {
-                    dest.flush()
-                    grp.leave()
+                    autoreleasepool {
+                        dest.flush()
+                        grp.leave()
+                    }
                 }
             }
         }

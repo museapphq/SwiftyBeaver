@@ -100,7 +100,7 @@ open class BaseDestination: Hashable, Equatable {
     public init() {
         let uuid = NSUUID().uuidString
         let queueLabel = "swiftybeaver-queue-" + uuid
-        queue = DispatchQueue(label: queueLabel, target: queue)
+        queue = DispatchQueue(label: queueLabel, autoreleaseFrequency: .workItem, target: queue)
     }
 
     /// send / store the formatted log message to the destination
@@ -124,9 +124,17 @@ open class BaseDestination: Hashable, Equatable {
             fatalError("Queue not set")
         }
         if synchronously {
-            queue.sync(execute: block)
+            queue.sync(execute: {
+                autoreleasepool {
+                    block()
+                }
+            })
         } else {
-            queue.async(execute: block)
+            queue.async(execute: {
+                autoreleasepool {
+                    block()
+                }
+            })
         }
     }
 
@@ -134,7 +142,11 @@ open class BaseDestination: Hashable, Equatable {
         guard let queue = queue else {
             fatalError("Queue not set")
         }
-        return try queue.sync(execute: block)
+        return try queue.sync(execute: {
+            try autoreleasepool {
+                try block()
+            }
+        })
     }
 
     ////////////////////////////////
