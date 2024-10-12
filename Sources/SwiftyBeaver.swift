@@ -32,7 +32,7 @@ open class SwiftyBeaver {
     /// A private queue for synchronizing access to `destinations`.
     /// Read accesses are done concurrently.
     /// Write accesses are done with a barrier, ensuring only 1 operation is ran at that time.
-    private static let queue = DispatchQueue(label: "destination queue", attributes: .concurrent, autoreleaseFrequency: .workItem)
+    public static let queue = DispatchQueue(label: "destination queue", attributes: .concurrent, autoreleaseFrequency: .workItem)
 
     // MARK: Destination Handling
 
